@@ -1,0 +1,9 @@
+/bin/
+*.bak
+.DS_Store
+/build/
+*.class
+*.log
+/target/
+.settings/
+/hsqldb.temp/

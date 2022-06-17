@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ewa_confs>
+	<snowflake workId="0" datacenterId="0" />
+	<!-- Cookie加密解密 -->
+	<securities>
+		<!-- use for cookie encrypt/decrypt -->
+		<security name="aes" algorithm="aes-256-gcm" key="change to your key" />
+	</securities>
+	<!-- 初始化加载的全局变量 -->
+	<requestvaluesGlobal>
+		<!-- EWA_STYLE所在目录 -->
+		<rv name="rv_ewa_style_path" value="/EmpScriptV2/" />
+	</requestvaluesGlobal>
+	<initparas>
+		<!-- sqlprofiler HSQLDB数据库所在目录，不设定的话，会在临时目录创建 -->
+		<para name="sqlprofiler_hsqldb_path" value="/home/admin/java/com.gdxsoft/emp-sqlserver-profiler/hsqldb.temp" />
+	</initparas>
+
+	<!-- 数据库连接池 -->
+	<databases>
+		<!-- java -cp ../target/lib/hsqldb-2.6.1.jar org.hsqldb.Server \ -->
+		<!-- -database.0 hsqldb \ -->
+		<!-- -dbname.0 sqlprofiler \ -->
+		<!-- -port 59001 \ -->
+		<!-- -address localhost \ -->
+		<!-- -silent false \ -->
+		<!-- -trace true -->
+		<!-- <database name="hsqldb_server" type="HSQLDB" connectionString="jdbc/hsqldb_server" schemaName="PUBLIC"> <pool driverClassName="org.hsqldb.jdbc.JDBCDriver" 
+			username="SA" password="gldflg!fsd$fldfnnd" url="jdbc:hsqldb:hsql://localhost:59001/sqlprofiler" maxActive="10" maxIdle="120" 
+			maxWait="5000"></pool></database> -->
+	</databases>
+</ewa_confs>
