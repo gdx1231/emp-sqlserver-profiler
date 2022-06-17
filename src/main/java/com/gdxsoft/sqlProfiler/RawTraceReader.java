@@ -78,11 +78,9 @@ public class RawTraceReader {
 		if (eventClass >= 0 && eventClass < 255) {
 			ProfilerEvent evt = new ProfilerEvent();
 			evt.m_Events[27] = eventClass;
-			evt.m_ColumnMask |= 1 << 27;
 			while (this.readNext1()) {
-				// columnid = (int)m_Reader[0];
 				columnid = m_Reader.getInt(1);
-				if (columnid > 64)
+				if (columnid > evt.m_Events.length)
 					return evt;
 
 				m_Delegates[columnid].setReader(m_Reader);

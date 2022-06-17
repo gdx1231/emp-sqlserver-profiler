@@ -411,6 +411,7 @@ public class SqlServerProfiler {
 		rv.addOrUpdateValue("TL_LOGINSID", evt.getLoginSid(), "binary", 100);
 		rv.addOrUpdateValue("TL_BinaryData", evt.getBinaryData(), "binary", 100);
 		rv.addOrUpdateValue("TL_TargetLoginSid", evt.getTargetLoginSid(), "binary", 100);
+		
 		rv.addOrUpdateValue("TL_PlanHandle", evt.getPlanHandle(), "binary", 100);
 		
 		rv.addOrUpdateValue("TL_GUID", evt.getGUID());
@@ -425,7 +426,7 @@ public class SqlServerProfiler {
 		String caption = getEventCaption(evt);
 		// LOGGER.info(caption);
 		System.out.println(caption);
-		String td = evt.getFormattedData(ProfilerEventColumns.TextData, null);
+		String td = evt.getTextData();
 		if (StringUtils.isNotBlank(td)) {
 			// LOGGER.info(td);
 			System.out.println(td);

@@ -46,14 +46,12 @@ public class SetBaseColumn {
 		cal.set(Calendar.MILLISECOND, msec);
 
 		evt.m_Events[columnid] = cal.getTime();
-		evt.m_ColumnMask |= (long) 1 << columnid;
 	}
 
 	public void setByteColumn(ProfilerEvent evt, int columnid) throws SQLException {
 		// byte[] b = new byte[(int) m_Reader[1]];
 		byte[] b = new byte[m_Reader.getByte(3)];
 		evt.m_Events[columnid] = b;
-		evt.m_ColumnMask |= 1L << columnid;
 	}
 
 	public void setStringColumn(ProfilerEvent evt, int columnid) throws SQLException {
@@ -67,7 +65,6 @@ public class SetBaseColumn {
 		// System.out.println(colid + "," + length + "," + bytes.length + ", " + txt);
 		evt.m_Events[columnid] = txt;
 
-		evt.m_ColumnMask |= 1L << columnid;
 	}
 
 	public void setIntColumn(ProfilerEvent evt, int columnid) throws SQLException {
@@ -76,7 +73,6 @@ public class SetBaseColumn {
 		byte[] bytes = m_Reader.getBytes(3);
 		System.arraycopy(bytes, 0, m_B4, 0, 4);
 		evt.m_Events[columnid] = toInt32(m_B4);
-		evt.m_ColumnMask |= 1L << columnid;
 	}
 
 	public void setLongColumn(ProfilerEvent evt, int columnid) throws SQLException {
@@ -84,7 +80,6 @@ public class SetBaseColumn {
 		byte[] bytes = m_Reader.getBytes(3);
 		System.arraycopy(bytes, 0, m_B8, 0, 8);
 		evt.m_Events[columnid] = toInt64(m_B8);
-		evt.m_ColumnMask |= 1L << columnid;
 	}
 
 	public static long toInt64(byte[] value) {

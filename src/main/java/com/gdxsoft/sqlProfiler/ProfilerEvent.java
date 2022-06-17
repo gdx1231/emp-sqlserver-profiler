@@ -3,10 +3,7 @@ package com.gdxsoft.sqlProfiler;
 import java.util.Date;
 
 public class ProfilerEvent {
-	public Object[] m_Events = new Object[65];
-	public long m_ColumnMask;
-	// ReSharper disable UnusedMember.Global
-	// ReSharper disable InconsistentNaming
+	public Object[] m_Events = new Object[ProfilerEventColumns.ColumnNames.length];
 
 	/*
 	 * select 'case ProfilerEventColumns.'+Name + ': ' + case when row_number()
@@ -19,66 +16,32 @@ public class ProfilerEvent {
 	 * Type_Name,trace_column_id
 	 */
 
-	public String getFormattedData(int idx, String format) {
-		switch (ProfilerEventColumns.ProfilerColumnDataTypes[idx]) {
-		case Long:
-			return getLong(idx) + "";
-		case DateTime:
-			Date d = getDateTime(idx);
-			return 1 == d.getYear() ? "" : d.toString();
-		case Byte:
-			return getByte(idx).toString();
-		case Int:
-			return getInt(idx) + "";
-		case String:
-			return getString(idx);
-		case Guid:
-			return GetGuid(idx).toString();
+	private Integer getInt(int idx) {
+		return m_Events[idx] == null ? null : Integer.parseInt(m_Events[idx].toString());
+	}
+
+	private Long getLong(int idx) {
+		Object val = m_Events[idx];
+		if(val == null) {
+			return null;
 		}
-		return null;
-	}
-
-	private int getInt(int idx) {
-		if (!ColumnIsSet(idx))
-			return 0;
-		return m_Events[idx] == null ? 0 : Integer.parseInt(m_Events[idx].toString());
-	}
-
-	private long getLong(int idx) {
-		if (!ColumnIsSet(idx))
-			return 0;
-		return m_Events[idx] == null ? 0 : Long.parseLong(m_Events[idx].toString());
+		return Long.parseLong(val.toString());
 	}
 
 	private String getString(int idx) {
-		if (!ColumnIsSet(idx))
-			return "";
 		return m_Events[idx] == null ? "" : (String) m_Events[idx];
 	}
 
 	private byte[] getByte(int idx) {
-		if (!ColumnIsSet(idx))
-			return null;
-		return (byte[]) m_Events[idx];
+		return m_Events[idx] == null ? null : (byte[]) m_Events[idx];
 	}
 
 	private Date getDateTime(int idx) {
-		if (!ColumnIsSet(idx))
-			return null;
-		return (Date) m_Events[idx];
+		return m_Events[idx] == null ? null : (Date) m_Events[idx];
 	}
 
 	private java.util.UUID GetGuid(int idx) {
-		if (!ColumnIsSet(idx))
-			return null;
-		return (java.util.UUID) m_Events[idx];
-	}
-
-	// ReSharper disable MemberCanBePrivate.Global
-	public boolean ColumnIsSet(int columnId)
-	// ReSharper restore MemberCanBePrivate.Global
-	{
-		return (m_ColumnMask & (1L << columnId)) != 0;
+		return m_Events[idx] == null ? null : (java.util.UUID) m_Events[idx];
 	}
 
 	/*
@@ -102,15 +65,15 @@ public class ProfilerEvent {
 		return getByte(ProfilerEventColumns.BinaryData);
 	}
 
-	public int getDatabaseID() {
+	public Integer getDatabaseID() {
 		return getInt(ProfilerEventColumns.DatabaseID);
 	}
 
-	public long getTransactionID() {
+	public Long getTransactionID() {
 		return getLong(ProfilerEventColumns.TransactionID);
 	}
 
-	public int getLineNumber() {
+	public Integer getLineNumber() {
 		return getInt(ProfilerEventColumns.LineNumber);
 	}
 
@@ -126,7 +89,7 @@ public class ProfilerEvent {
 		return getString(ProfilerEventColumns.HostName);
 	}
 
-	public int getClientProcessID() {
+	public Integer getClientProcessID() {
 		return getInt(ProfilerEventColumns.ClientProcessID);
 	}
 
@@ -138,11 +101,11 @@ public class ProfilerEvent {
 		return getString(ProfilerEventColumns.LoginName);
 	}
 
-	public int getSPID() {
+	public Integer getSPID() {
 		return getInt(ProfilerEventColumns.SPID);
 	}
 
-	public long getDuration() {
+	public Long getDuration() {
 		return getLong(ProfilerEventColumns.Duration);
 	}
 
@@ -154,43 +117,43 @@ public class ProfilerEvent {
 		return getDateTime(ProfilerEventColumns.EndTime);
 	}
 
-	public long getReads() {
+	public Long getReads() {
 		return getLong(ProfilerEventColumns.Reads);
 	}
 
-	public long getWrites() {
+	public Long getWrites() {
 		return getLong(ProfilerEventColumns.Writes);
 	}
 
-	public int getCPU() {
+	public Integer getCPU() {
 		return getInt(ProfilerEventColumns.CPU);
 	}
 
-	public long getPermissions() {
+	public Long getPermissions() {
 		return getLong(ProfilerEventColumns.Permissions);
 	}
 
-	public int getSeverity() {
+	public Integer getSeverity() {
 		return getInt(ProfilerEventColumns.Severity);
 	}
 
-	public int getEventSubClass() {
+	public Integer getEventSubClass() {
 		return getInt(ProfilerEventColumns.EventSubClass);
 	}
 
-	public int getObjectID() {
+	public Integer getObjectID() {
 		return getInt(ProfilerEventColumns.ObjectID);
 	}
 
-	public int getSuccess() {
+	public Integer getSuccess() {
 		return getInt(ProfilerEventColumns.Success);
 	}
 
-	public int getIndexID() {
+	public Integer getIndexID() {
 		return getInt(ProfilerEventColumns.IndexID);
 	}
 
-	public int getIntegerData() {
+	public Integer getIntegerData() {
 		return getInt(ProfilerEventColumns.IntegerData);
 	}
 
@@ -198,31 +161,31 @@ public class ProfilerEvent {
 		return getString(ProfilerEventColumns.ServerName);
 	}
 
-	public int getEventClass() {
+	public Integer getEventClass() {
 		return getInt(ProfilerEventColumns.EventClass);
 	}
 
-	public int getObjectType() {
+	public Integer getObjectType() {
 		return getInt(ProfilerEventColumns.ObjectType);
 	}
 
-	public int getNestLevel() {
+	public Integer getNestLevel() {
 		return getInt(ProfilerEventColumns.NestLevel);
 	}
 
-	public int getState() {
+	public Integer getState() {
 		return getInt(ProfilerEventColumns.State);
 	}
 
-	public int getError() {
+	public Integer getError() {
 		return getInt(ProfilerEventColumns.Error);
 	}
 
-	public int getMode() {
+	public Integer getMode() {
 		return getInt(ProfilerEventColumns.Mode);
 	}
 
-	public int getHandle() {
+	public Integer getHandle() {
 		return getInt(ProfilerEventColumns.Handle);
 	}
 
@@ -266,7 +229,7 @@ public class ProfilerEvent {
 		return getByte(ProfilerEventColumns.TargetLoginSid);
 	}
 
-	public int getColumnPermissions() {
+	public Integer getColumnPermissions() {
 		return getInt(ProfilerEventColumns.ColumnPermissions);
 	}
 
@@ -282,27 +245,27 @@ public class ProfilerEvent {
 		return getString(ProfilerEventColumns.MethodName);
 	}
 
-	public long getRowCounts() {
+	public Long getRowCounts() {
 		return getLong(ProfilerEventColumns.RowCounts);
 	}
 
-	public int getRequestID() {
+	public Integer getRequestID() {
 		return getInt(ProfilerEventColumns.RequestID);
 	}
 
-	public long getXactSequence() {
+	public Long getXactSequence() {
 		return getLong(ProfilerEventColumns.XactSequence);
 	}
 
-	public long getEventSequence() {
+	public Long getEventSequence() {
 		return getLong(ProfilerEventColumns.EventSequence);
 	}
 
-	public long getBigintData1() {
+	public Long getBigintData1() {
 		return getLong(ProfilerEventColumns.BigintData1);
 	}
 
-	public long getBigintData2() {
+	public Long getBigintData2() {
 		return getLong(ProfilerEventColumns.BigintData2);
 	}
 
@@ -310,19 +273,19 @@ public class ProfilerEvent {
 		return GetGuid(ProfilerEventColumns.GUID);
 	}
 
-	public int getIntegerData2() {
+	public Integer getIntegerData2() {
 		return getInt(ProfilerEventColumns.IntegerData2);
 	}
 
-	public long getObjectID2() {
+	public Long getObjectID2() {
 		return getLong(ProfilerEventColumns.ObjectID2);
 	}
 
-	public int getType() {
+	public Integer getType() {
 		return getInt(ProfilerEventColumns.Type);
 	}
 
-	public int getOwnerID() {
+	public Integer getOwnerID() {
 		return getInt(ProfilerEventColumns.OwnerID);
 	}
 
@@ -330,15 +293,15 @@ public class ProfilerEvent {
 		return getString(ProfilerEventColumns.ParentName);
 	}
 
-	public int getIsSystem() {
+	public Integer getIsSystem() {
 		return getInt(ProfilerEventColumns.IsSystem);
 	}
 
-	public int getOffset() {
+	public Integer getOffset() {
 		return getInt(ProfilerEventColumns.Offset);
 	}
 
-	public int getSourceDatabaseID() {
+	public Integer getSourceDatabaseID() {
 		return getInt(ProfilerEventColumns.SourceDatabaseID);
 	}
 
