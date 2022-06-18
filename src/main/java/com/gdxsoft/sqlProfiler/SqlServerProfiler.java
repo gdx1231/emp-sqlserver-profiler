@@ -1,5 +1,6 @@
 package com.gdxsoft.sqlProfiler;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -11,6 +12,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,7 @@ import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.datasource.DataConnection;
 import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.utils.UAes;
+import com.gdxsoft.easyweb.utils.UFile;
 import com.gdxsoft.easyweb.utils.UJSon;
 import com.gdxsoft.easyweb.utils.USnowflake;
 import com.gdxsoft.easyweb.utils.Utils;
@@ -70,6 +73,43 @@ public class SqlServerProfiler {
 
 	}
 
+	/**
+	 * 
+	 * @param host
+	 * @param port
+	 * @param database
+	 * @param username
+	 * @param password
+	 * @return
+	 * @throws Exception
+	 */
+	public static SqlServerProfiler getInstance(String host, int port, String database, String username,
+			String password) throws Exception {
+		int id = (host + "_" + port + "_" + username + "_" + password + "_" + database).hashCode();
+		if (instances.containsKey(id)) {
+			return instances.get(id);
+		}
+		synchronized (instances) {
+			if (instances.containsKey(id)) {
+				return instances.get(id);
+			}
+			SqlServerProfiler sp = new SqlServerProfiler();
+			sp.tsId = id;
+			sp.connStr = "sqlprofiler_" + id;
+
+			sp.init(host, port, database, username, password);
+
+			instances.put(id, sp);
+			return sp;
+		}
+	}
+
+	/**
+	 * 
+	 * @param tsId
+	 * @return
+	 * @throws Exception
+	 */
 	public static SqlServerProfiler getInstance(int tsId) throws Exception {
 		if (instances.containsKey(tsId)) {
 			return instances.get(tsId);
@@ -273,13 +313,13 @@ public class SqlServerProfiler {
 			return;
 		this.m_NeedStop = true;
 
-		if(this.m_Rdr == null) {
+		if (this.m_Rdr == null) {
 			this.m_ProfilingState = ProfilingStateEnum.psStopped;
 			newEventArrived(m_EventStopped, true);
-			
+
 			return;
 		}
-		
+
 		DataConnection cnn = getConnection();
 		this.m_Rdr.pauseTrace(cnn);
 		this.m_Rdr.closeTrace(cnn);
@@ -333,17 +373,31 @@ public class SqlServerProfiler {
 		}
 
 		return ProfilerEvents.Names[evt.getEventClass()];
-	} // End Function GetEventCaption
+	} 
 
+	public String exportRecords() throws JSONException, IOException {
+		RequestValue rv = new RequestValue();
+		rv.addOrUpdateValue("TS_ID", this.tsId, "int", 100);
+		String sql = "select * from TRACE_LOG where ts_id=@ts_id order by tl_id";
+		DTTable tb = DTTable.getJdbcTable(sql, HSqlDbServer.CONN_STR, rv);
+	
+		String file = HSqlDbServer.WORK_PATH + File.separator + "export_" + this.tsId + ".json";
+		UFile.createNewTextFile(file, tb.toJSONArray().toString(2));
+		return file;
+
+	}
+	public void truncateRecords() throws JSONException, IOException {
+		String sql = "truncate table TRACE_LOG";
+		DataConnection.updateAndClose(sql, HSqlDbServer.CONN_STR, null);
+	}
+	
 	public void recordToDb(ProfilerEvent evt) {
-
 		RequestValue rv = new RequestValue();
 		rv.addOrUpdateValue("TS_ID", this.tsId, "int", 100);
 		rv.addOrUpdateValue("TL_ID", USnowflake.nextId(), "bigint", 100);
-		
-		
+
 		rv.addOrUpdateValue("TL_TEXTDATA", evt.getTextData());
-		
+
 		rv.addOrUpdateValue("TL_DURATION", evt.getDuration(), "bigint", 100);
 		rv.addOrUpdateValue("TL_READS", evt.getReads(), "bigint", 100);
 		rv.addOrUpdateValue("TL_Writes", evt.getWrites(), "bigint", 100);
@@ -355,10 +409,9 @@ public class SqlServerProfiler {
 		rv.addOrUpdateValue("TL_XactSequence", evt.getXactSequence(), "bigint", 100);
 		rv.addOrUpdateValue("TL_Permissions", evt.getPermissions(), "bigint", 100);
 		rv.addOrUpdateValue("TL_ObjectID2", evt.getObjectID2(), "bigint", 100);
-		
+
 		rv.addOrUpdateValue("TL_STARTTIME", evt.getStartTime(), "date", 100);
 		rv.addOrUpdateValue("TL_ENDTIME", evt.getEndTime(), "date", 100);
-		
 
 		rv.addOrUpdateValue("TL_ApplicationName", evt.getApplicationName());
 		rv.addOrUpdateValue("TL_HostName", evt.getHostName());
@@ -370,17 +423,17 @@ public class SqlServerProfiler {
 		rv.addOrUpdateValue("TL_FileName", evt.getFileName());
 		rv.addOrUpdateValue("TL_TargetLoginName", evt.getTargetLoginName());
 		rv.addOrUpdateValue("TL_TargetUserName", evt.getTargetUserName());
-		rv.addOrUpdateValue("TL_LinkedServerName", evt.getLinkedServerName() );
-		rv.addOrUpdateValue("TL_SessionLoginName", evt.getSessionLoginName() );
-		rv.addOrUpdateValue("TL_RoleName", evt.getRoleName() );
-		rv.addOrUpdateValue("TL_ProviderName", evt.getProviderName() );
-		rv.addOrUpdateValue("TL_ParentName", evt.getParentName() );
-		rv.addOrUpdateValue("TL_OwnerName", evt.getOwnerName() );
-		rv.addOrUpdateValue("TL_ObjectName", evt.getObjectName() );
-		rv.addOrUpdateValue("TL_MethodName", evt.getMethodName() );
-		rv.addOrUpdateValue("TL_LoginName", evt.getLoginName() );
-		rv.addOrUpdateValue("TL_DBUserName", evt.getDBUserName() );
-		
+		rv.addOrUpdateValue("TL_LinkedServerName", evt.getLinkedServerName());
+		rv.addOrUpdateValue("TL_SessionLoginName", evt.getSessionLoginName());
+		rv.addOrUpdateValue("TL_RoleName", evt.getRoleName());
+		rv.addOrUpdateValue("TL_ProviderName", evt.getProviderName());
+		rv.addOrUpdateValue("TL_ParentName", evt.getParentName());
+		rv.addOrUpdateValue("TL_OwnerName", evt.getOwnerName());
+		rv.addOrUpdateValue("TL_ObjectName", evt.getObjectName());
+		rv.addOrUpdateValue("TL_MethodName", evt.getMethodName());
+		rv.addOrUpdateValue("TL_LoginName", evt.getLoginName());
+		rv.addOrUpdateValue("TL_DBUserName", evt.getDBUserName());
+
 		rv.addOrUpdateValue("TL_CPU", evt.getCPU(), "int", 100);
 		rv.addOrUpdateValue("TL_SPID", evt.getSPID(), "int", 100);
 		rv.addOrUpdateValue("TL_DatabaseID", evt.getDatabaseID(), "int", 100);
@@ -407,15 +460,15 @@ public class SqlServerProfiler {
 		rv.addOrUpdateValue("TL_ObjectID", evt.getObjectID(), "int", 100);
 		rv.addOrUpdateValue("TL_Mode", evt.getMode(), "int", 100);
 		rv.addOrUpdateValue("TL_ColumnPermissions", evt.getColumnPermissions(), "int", 100);
-		
+
 		rv.addOrUpdateValue("TL_LOGINSID", evt.getLoginSid(), "binary", 100);
 		rv.addOrUpdateValue("TL_BinaryData", evt.getBinaryData(), "binary", 100);
 		rv.addOrUpdateValue("TL_TargetLoginSid", evt.getTargetLoginSid(), "binary", 100);
-		
+
 		rv.addOrUpdateValue("TL_PlanHandle", evt.getPlanHandle(), "binary", 100);
-		
+
 		rv.addOrUpdateValue("TL_GUID", evt.getGUID());
-		
+
 		DataConnection.updateAndClose(SQL_LOG_NEW, HSqlDbServer.CONN_STR, rv);
 	}
 
@@ -424,11 +477,11 @@ public class SqlServerProfiler {
 			return;
 		}
 		String caption = getEventCaption(evt);
-		// LOGGER.info(caption);
+		// LOGGER.debug(caption);
 		System.out.println(caption);
 		String td = evt.getTextData();
 		if (StringUtils.isNotBlank(td)) {
-			// LOGGER.info(td);
+			// LOGGER.debug(td);
 			System.out.println(td);
 		}
 
@@ -439,7 +492,7 @@ public class SqlServerProfiler {
 		cnn.setConfigName(connStr);
 		cnn.setRequestValue(new RequestValue());
 		cnn.connect();
-		LOGGER.info("Create a connection {}", cnn.getConnection());
+		LOGGER.debug("Create a connection {}", cnn.getConnection());
 		return cnn;
 	}
 
@@ -452,7 +505,7 @@ public class SqlServerProfiler {
 		cnn.setRequestValue(new RequestValue());
 		cnn.getDataHelper().setConnection(con);
 
-		LOGGER.info("Create none pool connection {}", con);
+		LOGGER.debug("Create none pool connection {}", con);
 		return cnn;
 	}
 
@@ -490,9 +543,10 @@ public class SqlServerProfiler {
 
 	private void initSqlServerTraceConnPool() throws ParserConfigurationException, SAXException, IOException {
 		ConnectionConfigs c1 = ConnectionConfigs.instance();
-
-		this.connUrl = "jdbc:sqlserver://" + server + ":" + port + ";DatabaseName=" + database + ";applicationName="
-				+ APPNAME;
+		// 避免 unable to find valid certification path to requested target
+		// TrustServerCertificate=True
+		this.connUrl = "jdbc:sqlserver://" + server + ":" + port + ";TrustServerCertificate=True;DatabaseName="
+				+ database + ";applicationName=" + APPNAME;
 
 		this.traceFileName = APPNAME + "." + this.tsId + "." + Utils.md5(connUrl);
 
@@ -514,7 +568,7 @@ public class SqlServerProfiler {
 
 		poolCfg.setPool(poolParams);
 		c1.put(connStr, poolCfg);
-		LOGGER.info("Create pool {} {}", connStr, connUrl);
+		LOGGER.debug("Create pool {} {}", connStr, connUrl);
 
 		// clearProfilers();
 	}

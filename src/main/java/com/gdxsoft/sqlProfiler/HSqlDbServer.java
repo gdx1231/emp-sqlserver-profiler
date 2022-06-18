@@ -29,6 +29,8 @@ public class HSqlDbServer {
 	private static HSqlDbServer INSTANCE;
 	public static final String CONN_STR = "hsqldb_server"; // 必须小写
 
+	public static String WORK_PATH;
+	
 	public static HSqlDbServer getInstance() throws Exception {
 		if (INSTANCE != null) {
 			return INSTANCE;
@@ -64,7 +66,7 @@ public class HSqlDbServer {
 		String url = "jdbc:hsqldb:file:" + hsqlDbWorkPath + "/hsqldb";
 
 		MTableStr poolParams = new MTableStr();
-		poolParams.put("driverClassName", "org.hsqldb.jdbcDriver");
+		poolParams.put("driverClassName", "org.hsqldb.jdbc.JDBCDriver");
 		poolParams.put("url", url);
 		poolParams.put("username", "sa");
 		poolParams.put("password", "gldflg!fsd$fldfnnd");
@@ -98,7 +100,8 @@ public class HSqlDbServer {
 		if (!tmpdir.exists()) {
 			UFile.buildPaths(tmpdir.getAbsolutePath());
 		}
-
+		WORK_PATH = tmpdir.getAbsolutePath();
+		
 		List<String> files = new ArrayList<>();
 		files.add("hsqldb.script");
 		files.add("hsqldb.properties");

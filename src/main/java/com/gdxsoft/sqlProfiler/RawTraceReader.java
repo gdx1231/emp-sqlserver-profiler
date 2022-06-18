@@ -124,13 +124,13 @@ public class RawTraceReader {
 	private boolean readNext1() {
 		try {
 			if (this.m_Reader.isClosed()) {
-				LOGGER.info("m_Reader closed. ");
+				LOGGER.debug("m_Reader closed. ");
 				this.m_LastRead = false;
 				return m_LastRead;
 			}
 			m_LastRead = this.m_Reader.next();
 			if (!m_LastRead) {
-				LOGGER.info("readNext no next. {}", m_LastRead);
+				LOGGER.debug("readNext no next. {}", m_LastRead);
 			}
 		} catch (SQLException e) {
 			m_LastRead = false;
@@ -146,7 +146,7 @@ public class RawTraceReader {
 	 */
 	public void close() {
 		if (this.m_Reader != null) {
-			LOGGER.info("Close m_reader, {},{}", this.m_Reader, this.m_Conn);
+			LOGGER.debug("Close m_reader, {},{}", this.m_Reader, this.m_Conn);
 			try {
 				if (!this.m_Reader.isClosed()) {
 					this.m_Reader.close();
@@ -156,7 +156,7 @@ public class RawTraceReader {
 			}
 		}
 		if (this.m_Conn != null) {
-			LOGGER.info("Close m_conn, {}", this.m_Conn);
+			LOGGER.debug("Close m_conn, {}", this.m_Conn);
 			this.m_Conn.close();
 		}
 		m_LastRead = false;
@@ -170,7 +170,7 @@ public class RawTraceReader {
 		for (int i = 0; i < columns.length; i++) {
 			sb.al(sql + columns[i] + ", 1;");
 		}
-		LOGGER.info("{}, {}", sb, this.m_Conn);
+		LOGGER.debug("{}, {}", sb, this.m_Conn);
 		this.m_Conn.executeUpdateNoParameter(sb.toString());
 	}
 
@@ -245,7 +245,7 @@ public class RawTraceReader {
 			}
 		}
 		sql += "";
-		LOGGER.info("{}, {}", sql, this.m_Conn);
+		LOGGER.debug("{}, {}", sql, this.m_Conn);
 		this.m_Conn.executeUpdateNoParameter(sql);
 	}
 
@@ -253,7 +253,7 @@ public class RawTraceReader {
 		String sql = "exec sp_trace_setfilter " + m_TraceId + ", " + columnId + ", " + logicalOperator + ", "
 				+ comparisonOperator + ", N'" + value.replace("'", "''") + "'";
 
-		LOGGER.info("{}, {}", sql, this.m_Conn);
+		LOGGER.debug("{}, {}", sql, this.m_Conn);
 		this.m_Conn.executeUpdateNoParameter(sql);
 	}
 
@@ -279,7 +279,7 @@ public class RawTraceReader {
 		DTTable tb = DTTable.getJdbcTable(sql1, m_Conn);
 		if (tb.getCount() > 0) {
 			m_TraceId = tb.getCell(0, "id").toInt();
-			LOGGER.info("Use exists traceId = {}", this.m_TraceId);
+			LOGGER.debug("Use exists traceId = {}", this.m_TraceId);
 		} else {
 			// [ @tracefile = ] Specifies the location and file name to which the trace will
 			// be written.
@@ -345,14 +345,14 @@ public class RawTraceReader {
 					+ ", @maxfilesize, @stoptime, @filecount)}";
 			HashMap<String, Object> map = this.m_Conn.executeProcdure(sql);
 
-			LOGGER.info("{}", sql);
+			LOGGER.debug("{}", sql);
 
 			int result = UConvert.ToInt32(map.get("result_int_out".toUpperCase()).toString());
 			if (result != 0) { // 失败
 				throw new Exception("Failed to create trace(sp_trace_create), result = " + result);
 			}
 			m_TraceId = UConvert.ToInt32(map.get("traceid_int_out".toUpperCase()).toString());
-			LOGGER.info("Create new traceId = {}", this.m_TraceId);
+			LOGGER.debug("Create new traceId = {}", this.m_TraceId);
 		}
 	}
 
@@ -423,14 +423,14 @@ public class RawTraceReader {
 				+ ", @maxfilesize, @stoptime, @filecount)}";
 		HashMap<String, Object> map = this.m_Conn.executeProcdure(sql);
 
-		LOGGER.info("{} {}", sql, this.m_Conn);
+		LOGGER.debug("{} {}", sql, this.m_Conn);
 
 		int result = UConvert.ToInt32(map.get("result_int_out".toUpperCase()).toString());
 		if (result != 0) { // 失败
 			throw new Exception("Failed to create trace(sp_trace_create), result = " + result);
 		}
 		m_TraceId = UConvert.ToInt32(map.get("traceid_int_out".toUpperCase()).toString());
-		LOGGER.info("Create new traceId = {}", this.m_TraceId);
+		LOGGER.debug("Create new traceId = {}", this.m_TraceId);
 	}
 
 	/**
@@ -441,7 +441,7 @@ public class RawTraceReader {
 	 */
 	private void controlTrace(DataConnection con, int status) {
 		String sql = "exec sp_trace_setstatus " + m_TraceId + ", " + status;
-		LOGGER.info("{} {}", sql, con);
+		LOGGER.debug("{} {}", sql, con);
 		con.executeUpdateNoParameter(sql);
 	}
 
@@ -451,7 +451,7 @@ public class RawTraceReader {
 	 * @param con
 	 */
 	public void closeTrace(DataConnection con) {
-		LOGGER.info("CLOSE trace, {} {}", this.m_TraceId, 2);
+		LOGGER.debug("CLOSE trace, {} {}", this.m_TraceId, 2);
 		controlTrace(con, 2);
 		this.m_TraceId = 0;
 		try {
@@ -467,7 +467,7 @@ public class RawTraceReader {
 	 * @param con
 	 */
 	public void pauseTrace(DataConnection con) {
-		LOGGER.info("PAUSE trace, {} {}", this.m_TraceId, 3);
+		LOGGER.debug("PAUSE trace, {} {}", this.m_TraceId, 3);
 		controlTrace(con, 3);
 		try {
 			this.close();
@@ -480,7 +480,7 @@ public class RawTraceReader {
 	 * sp_trace_setstatus state = 1
 	 */
 	public void startTrace() throws SQLException {
-		LOGGER.info("START trace, {} {}", this.m_TraceId, 1);
+		LOGGER.debug("START trace, {} {}", this.m_TraceId, 1);
 		// if (m_currentsettings.EventsColumns.BatchCompleted)
 		this.setEvent(TSQL.SQLBatchCompleted, ProfilerEventColumns.TextData, ProfilerEventColumns.LoginName,
 				ProfilerEventColumns.CPU, ProfilerEventColumns.Reads, ProfilerEventColumns.Writes,
@@ -512,7 +512,7 @@ public class RawTraceReader {
 	private void createTraceGetdata() {
 		// @traceid, @records
 		String sql = "exec sp_trace_getdata " + m_TraceId + ", 0";
-		LOGGER.info("{} {}", sql, m_Conn);
+		LOGGER.debug("{} {}", sql, m_Conn);
 		this.m_Conn.executeQuery(sql);
 		this.m_Reader = this.m_Conn.getLastResult().getResultSet();
 	}
