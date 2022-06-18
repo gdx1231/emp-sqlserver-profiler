@@ -30,6 +30,7 @@ public class HSqlDbServer {
 	public static final String CONN_STR = "hsqldb_server"; // 必须小写
 
 	public static String WORK_PATH;
+	public static String HSQLDB_URL;
 	
 	public static HSqlDbServer getInstance() throws Exception {
 		if (INSTANCE != null) {
@@ -64,7 +65,9 @@ public class HSqlDbServer {
 
 		String hsqlDbWorkPath = createHsqldbWorkDirectory().getAbsolutePath();
 		String url = "jdbc:hsqldb:file:" + hsqlDbWorkPath + "/hsqldb";
-
+		
+		HSQLDB_URL = url;
+		
 		MTableStr poolParams = new MTableStr();
 		poolParams.put("driverClassName", "org.hsqldb.jdbc.JDBCDriver");
 		poolParams.put("url", url);

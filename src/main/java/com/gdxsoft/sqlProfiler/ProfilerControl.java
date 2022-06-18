@@ -14,34 +14,38 @@ public class ProfilerControl {
 	private static SqlServerProfiler consoleSqlServerProfiler;
 
 	private static SqlServerProfiler interactive(BufferedReader console) throws Exception {
-		System.out.println("数据库地址(localhost)：");
+		System.out.print("SQLServer host (localhost): ");
 		String host = readConsoleLine(console);
 		if (StringUtils.isBlank(host)) {
 			host = "localhost";
 		}
-		System.out.println("端口(1433)：");
+		System.out.print("SQLServer port (1433): ");
 		String sport = readConsoleLine(console);
 		int port = 1433;
 		if (!StringUtils.isBlank(sport)) {
 			try {
 				port = Integer.parseInt(sport);
 			} catch (Exception err) {
-				throw new Exception("端口为数字" + err.getMessage());
+				System.out.println("Invalid port, " + err.getMessage());
+				System.exit(0);
 			}
 		}
-		System.out.println("用户名(sa)：");
+		System.out.print("Database (blank): ");
+		String database = readConsoleLine(console);
+
+		System.out.print("Username (sa): ");
 		String username = readConsoleLine(console);
 		if (StringUtils.isBlank(username)) {
 			username = "sa";
 		}
-		System.out.println("密码*：");
+		System.out.print("Password*: ");
 		String password = readConsoleLine(console);
 		while (StringUtils.isBlank(password)) {
-			System.out.println("密码不能为空：");
+			System.out.print("Password must input");
 			password = readConsoleLine(console);
 		}
-		System.out.println("数据库*：");
-		String database = readConsoleLine(console);
+
+		System.out.println("Try connection to the SQLServer, " + host + ":" + port);
 		SqlServerProfiler profiler = SqlServerProfiler.getInstance(host, port, database, username, password);
 		return profiler;
 	}
@@ -56,7 +60,7 @@ public class ProfilerControl {
 
 		MStr help = new MStr();
 		help.al("Usage: --host localhost --port 1433 --username sa --password xxx --database mydb");
-		help.al("Usage: -s localhost -u sa -p xxx -d mydb -P 1433");
+		help.al("Usage: -h localhost -u sa -p xxx -d mydb -P 1433");
 		if (length % 2 != 0) {
 			System.out.println(help);
 			System.exit(0);
@@ -65,7 +69,7 @@ public class ProfilerControl {
 		for (int i = 0; i < length; i += 2) {
 			String cmd = args[i];
 			String cmd1 = args[i + 1];
-			if (cmd.equals("-host")) {
+			if (cmd.equals("--host") || cmd.equals("-h")) {
 				host = cmd1;
 			} else if (cmd.equals("--port") || cmd.equals("-P")) {
 				sport = cmd1;
@@ -91,6 +95,7 @@ public class ProfilerControl {
 			throw new Exception("参数-password需要提供");
 		}
 
+		System.out.println("Try connection to the SQLServer, " + host + ":" + port);
 		SqlServerProfiler profiler = SqlServerProfiler.getInstance(host, port, database, username, password);
 		return profiler;
 	}
@@ -248,6 +253,10 @@ public class ProfilerControl {
 			UJSon.rstSetFalse(result, "Invalid method");
 		}
 		result.put("profiling_state", sp.getProfilingState());
+		if (sp.isConsoleMode()) {
+			result.put("work_path", HSqlDbServer.WORK_PATH);
+			result.put("hsqldb", HSqlDbServer.HSQLDB_URL);
+		}
 		return result;
 	}
 
