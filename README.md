@@ -22,3 +22,5 @@ java -cp target/emp-sqlserver-profiler-1.0.0.jar;target/lib/* com.gdxsoft.sqlPro
 	truncate: truncate the HSQLDB local records(TRACE_LOG).
 	quit: to stop and quit.
 	help: to show this.
+
+
