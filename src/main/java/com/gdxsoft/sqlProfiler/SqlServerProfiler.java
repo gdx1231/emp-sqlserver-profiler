@@ -395,11 +395,20 @@ public class SqlServerProfiler {
 	}
 
 	public void recordToDb(ProfilerEvent evt) {
+		//	Blobs and Clobs
+		// HSQLDB is the only SQL open source database that supports a dedicated LOB store. Blobs and clobs can be very
+		// large and benefit from a separate store that avoids mixing their data with row data which is not too large.
+		// Internal database tables are used for the LOB catalog. Therefore each access to a LOB has the overhead of
+		// catalog lookup. This overhead is justified when the stored LOBs are large. HSQLDB supports long VARCHAR and
+		// VARBINARY columns that can be used instead of CLOB and BLOB especially when the average lob size is below 32
+		// KB. These types do not have the LOB catalog overhead.
+
+		int k32 = 32 * 1024; // 32k - 避免使用 Blob和Clob，会造成 .lob文件很大 ，普普通通就4-5个G
 		RequestValue rv = new RequestValue();
 		rv.addOrUpdateValue("TS_ID", this.tsId, "int", 100);
 		rv.addOrUpdateValue("TL_ID", USnowflake.nextId(), "bigint", 100);
 
-		rv.addOrUpdateValue("TL_TEXTDATA", evt.getTextData());
+		rv.addOrUpdateValue("TL_TEXTDATA", evt.getTextData(), "String", k32);
 
 		rv.addOrUpdateValue("TL_DURATION", evt.getDuration(), "bigint", 100);
 		rv.addOrUpdateValue("TL_READS", evt.getReads(), "bigint", 100);
@@ -464,11 +473,10 @@ public class SqlServerProfiler {
 		rv.addOrUpdateValue("TL_Mode", evt.getMode(), "int", 100);
 		rv.addOrUpdateValue("TL_ColumnPermissions", evt.getColumnPermissions(), "int", 100);
 
-		rv.addOrUpdateValue("TL_LOGINSID", evt.getLoginSid(), "binary", 100);
-		rv.addOrUpdateValue("TL_BinaryData", evt.getBinaryData(), "binary", 100);
-		rv.addOrUpdateValue("TL_TargetLoginSid", evt.getTargetLoginSid(), "binary", 100);
-
-		rv.addOrUpdateValue("TL_PlanHandle", evt.getPlanHandle(), "binary", 100);
+		rv.addOrUpdateValue("TL_LOGINSID", evt.getLoginSid(), "binary", k32);
+		rv.addOrUpdateValue("TL_BinaryData", evt.getBinaryData(), "binary", k32);
+		rv.addOrUpdateValue("TL_TargetLoginSid", evt.getTargetLoginSid(), "binary", k32);
+		rv.addOrUpdateValue("TL_PlanHandle", evt.getPlanHandle(), "binary", k32);
 
 		rv.addOrUpdateValue("TL_GUID", evt.getGUID());
 
