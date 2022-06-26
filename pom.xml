@@ -216,9 +216,13 @@
 			</plugin>
 		</plugins>
 	</build>
+	<!-- 发布项目 -->
+	<!-- mvn clean deploy -P release -->
+	<!-- https://issues.sonatype.org/browse/OSSRH-65277 -->
+	<!-- https://oss.sonatype.org/ -->
 	<profiles>
 		<profile>
-			<id>release</id> <!-- 部署要用到 -->
+			<id>release</id> 
 			<build>
 				<plugins>
 					<!-- Source -->
