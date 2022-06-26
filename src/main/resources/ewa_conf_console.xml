@@ -12,13 +12,6 @@
 	</initparas>
 	<!-- 数据库连接池 -->
 	<databases>
-		<!-- java -cp ../target/lib/hsqldb-2.6.1.jar org.hsqldb.Server \ -->
-		<!-- -database.0 hsqldb \ -->
-		<!-- -dbname.0 sqlprofiler \ -->
-		<!-- -port 59001 \ -->
-		<!-- -address localhost \ -->
-		<!-- -silent false \ -->
-		<!-- -trace true -->
 		<!-- <database name="hsqldb_server" type="HSQLDB" connectionString="jdbc/hsqldb_server" schemaName="PUBLIC"> <pool driverClassName="org.hsqldb.jdbc.JDBCDriver" 
 			username="SA" password="gldflg!fsd$fldfnnd" url="jdbc:hsqldb:hsql://localhost:59001/sqlprofiler" maxActive="10" maxIdle="120" 
 			maxWait="5000"></pool></database> -->

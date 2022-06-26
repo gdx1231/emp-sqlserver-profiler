@@ -27,6 +27,7 @@ import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.utils.UAes;
 import com.gdxsoft.easyweb.utils.UFile;
 import com.gdxsoft.easyweb.utils.UJSon;
+import com.gdxsoft.easyweb.utils.UPath;
 import com.gdxsoft.easyweb.utils.USnowflake;
 import com.gdxsoft.easyweb.utils.Utils;
 import com.gdxsoft.easyweb.utils.msnet.MTableStr;
@@ -188,6 +189,7 @@ public class SqlServerProfiler {
 	} // End Enum IntFilterCondition
 
 	public SqlServerProfiler() {
+		UPath.initPath();
 	}
 
 	public void init(String server, int port, String database, String username, String password)
@@ -373,24 +375,25 @@ public class SqlServerProfiler {
 		}
 
 		return ProfilerEvents.Names[evt.getEventClass()];
-	} 
+	}
 
 	public String exportRecords() throws JSONException, IOException {
 		RequestValue rv = new RequestValue();
 		rv.addOrUpdateValue("TS_ID", this.tsId, "int", 100);
 		String sql = "select * from TRACE_LOG where ts_id=@ts_id order by tl_id";
 		DTTable tb = DTTable.getJdbcTable(sql, HSqlDbServer.CONN_STR, rv);
-	
+
 		String file = HSqlDbServer.WORK_PATH + File.separator + "export_" + this.tsId + ".json";
 		UFile.createNewTextFile(file, tb.toJSONArray().toString(2));
 		return file;
 
 	}
+
 	public void truncateRecords() throws JSONException, IOException {
 		String sql = "truncate table TRACE_LOG";
 		DataConnection.updateAndClose(sql, HSqlDbServer.CONN_STR, null);
 	}
-	
+
 	public void recordToDb(ProfilerEvent evt) {
 		RequestValue rv = new RequestValue();
 		rv.addOrUpdateValue("TS_ID", this.tsId, "int", 100);

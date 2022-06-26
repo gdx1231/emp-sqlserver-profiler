@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
 import com.gdxsoft.easyweb.utils.UJSon;
+import com.gdxsoft.easyweb.utils.UPath;
 import com.gdxsoft.easyweb.utils.msnet.MStr;
 
 public class ProfilerControl {
@@ -44,6 +45,14 @@ public class ProfilerControl {
 			System.out.print("Password must input");
 			password = readConsoleLine(console);
 		}
+		String tempDir = HSqlDbServer.getDefaultWorkPath();
+
+		System.out.print("HSQLDB database path(" + tempDir + "): ");
+		String workPath = readConsoleLine(console);
+		if (StringUtils.isBlank(workPath)) {
+			workPath = tempDir;
+		}
+		HSqlDbServer.WORK_PATH = workPath;
 
 		System.out.println("Try connection to the SQLServer, " + host + ":" + port);
 		SqlServerProfiler profiler = SqlServerProfiler.getInstance(host, port, database, username, password);
@@ -57,6 +66,7 @@ public class ProfilerControl {
 		String username = "sa";
 		String password = "";
 		String database = "";
+		String tempDir = "";
 
 		MStr help = new MStr();
 		help.al("Usage: --host localhost --port 1433 --username sa --password xxx --database mydb");
@@ -73,12 +83,15 @@ public class ProfilerControl {
 				host = cmd1;
 			} else if (cmd.equals("--port") || cmd.equals("-P")) {
 				sport = cmd1;
-			} else if (cmd.equals("-username") || cmd.equals("-u")) {
+			} else if (cmd.equals("--username") || cmd.equals("-u")) {
 				username = cmd1;
-			} else if (cmd.equals("-password") || cmd.equals("-p")) {
+			} else if (cmd.equals("--password") || cmd.equals("-p")) {
 				password = cmd1;
-			} else if (cmd.equals("-database") || cmd.equals("-d")) {
+			} else if (cmd.equals("--database") || cmd.equals("-d")) {
 				database = cmd1;
+			} else if (cmd.equals("--workpath") || cmd.equals("-w")) {
+				tempDir = cmd1;
+				HSqlDbServer.WORK_PATH = tempDir; // hsqldb的工作目录
 			} else {
 				System.out.println("Invalid parameter: " + cmd);
 			}
@@ -118,6 +131,8 @@ public class ProfilerControl {
 	}
 
 	public static void console(String[] args) {
+		UPath.initPath();
+		
 		BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
 		SqlServerProfiler profiler = null;
 

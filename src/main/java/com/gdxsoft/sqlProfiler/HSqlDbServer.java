@@ -31,7 +31,7 @@ public class HSqlDbServer {
 
 	public static String WORK_PATH;
 	public static String HSQLDB_URL;
-	
+
 	public static HSqlDbServer getInstance() throws Exception {
 		if (INSTANCE != null) {
 			return INSTANCE;
@@ -65,9 +65,9 @@ public class HSqlDbServer {
 
 		String hsqlDbWorkPath = createHsqldbWorkDirectory().getAbsolutePath();
 		String url = "jdbc:hsqldb:file:" + hsqlDbWorkPath + "/hsqldb";
-		
+
 		HSQLDB_URL = url;
-		
+
 		MTableStr poolParams = new MTableStr();
 		poolParams.put("driverClassName", "org.hsqldb.jdbc.JDBCDriver");
 		poolParams.put("url", url);
@@ -85,6 +85,17 @@ public class HSqlDbServer {
 
 	}
 
+	public static String getDefaultWorkPath() {
+		String databasePath = SqlServerProfiler.APPNAME + "." + CONN_STR;
+		// ewa_conf定义的工作目录
+		String hsqldbPath = UPath.getInitPara(PARA_HSQLDB_PATH);
+		if (StringUtils.isBlank(hsqldbPath)) {
+			// 使用用户空间目录
+			hsqldbPath = System.getProperty("user.home") + File.separator + databasePath;
+		}
+		return hsqldbPath;
+	}
+
 	/**
 	 * 创建hsqldb工作目录
 	 * 
@@ -92,19 +103,18 @@ public class HSqlDbServer {
 	 * @throws Exception
 	 */
 	private static File createHsqldbWorkDirectory() throws Exception {
-		String databasePath = SqlServerProfiler.APPNAME + "." + CONN_STR;
-		// ewa_conf定义的工作目录
-		String hsqldbPath = UPath.getInitPara(PARA_HSQLDB_PATH);
-		if (StringUtils.isBlank(hsqldbPath)) {
-			// 使用临时目录
-			hsqldbPath = System.getProperty("java.io.tmpdir") + File.separator + databasePath;
+		String hsqldbPath = WORK_PATH; 
+		if (WORK_PATH == null || WORK_PATH.trim().length() == 0) {
+			// 外部没有设定，获取默认的路径
+			hsqldbPath = getDefaultWorkPath();
+			WORK_PATH = hsqldbPath;
 		}
 		File tmpdir = new File(hsqldbPath);
 		if (!tmpdir.exists()) {
 			UFile.buildPaths(tmpdir.getAbsolutePath());
 		}
 		WORK_PATH = tmpdir.getAbsolutePath();
-		
+
 		List<String> files = new ArrayList<>();
 		files.add("hsqldb.script");
 		files.add("hsqldb.properties");
