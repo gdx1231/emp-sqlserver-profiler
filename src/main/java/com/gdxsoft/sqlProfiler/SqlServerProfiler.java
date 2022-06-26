@@ -3,6 +3,7 @@ package com.gdxsoft.sqlProfiler;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
@@ -105,6 +106,117 @@ public class SqlServerProfiler {
 		}
 	}
 
+	public static String createConnStr(String host, int port, String database) {
+		return "jdbc:sqlserver://" + host + ":" + port + ";TrustServerCertificate=True;DatabaseName=" + database
+				+ ";applicationName=" + APPNAME;
+
+	}
+
+	/**
+	 * 测试连接
+	 * 
+	 * @param host
+	 * @param port
+	 * @param database
+	 * @param username
+	 * @param password
+	 * @return
+	 */
+	public static JSONObject testConnection(String host, int port, String database, String username, String password) {
+		try {
+			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+		} catch (ClassNotFoundException e) {
+			return UJSon.rstFalse(e.getMessage());
+		}
+		String connStr = SqlServerProfiler.createConnStr(host, port, database);
+		Connection con;
+		try {
+			con = DriverManager.getConnection(connStr, username, password);
+		} catch (SQLException e) {
+			return UJSon.rstFalse(e.getMessage());
+		}
+		DataConnection cnn = new DataConnection();
+		cnn.setConfigName(connStr);
+		cnn.setRequestValue(new RequestValue());
+		cnn.getDataHelper().setConnection(con);
+
+		return testConnection(cnn);
+	}
+
+	private static JSONObject testConnection(DataConnection cnn) {
+		cnn.executeQueryNoParameter("select 1");
+		if (cnn.getErrorMsg() != null) {
+			cnn.close();
+			return UJSon.rstFalse(cnn.getErrorMsg());
+		}
+
+		JSONObject result = UJSon.rstTrue();
+		DatabaseMetaData dbmd;
+		try {
+			dbmd = cnn.getConnection().getMetaData();
+			result.put("url", dbmd.getURL());
+			result.put("product", dbmd.getDatabaseProductName());
+			result.put("product_version", dbmd.getDatabaseProductVersion());
+			result.put("driver", dbmd.getDriverName());
+			result.put("driver_version", dbmd.getDriverName());
+		} catch (SQLException e) {
+			return UJSon.rstFalse(cnn.getErrorMsg());
+		} finally {
+			cnn.close();
+		}
+		return result;
+	}
+
+	/**
+	 * 测试连接
+	 * 
+	 * @param tsId
+	 * @return
+	 * @throws Exception
+	 */
+	public static JSONObject testConnection(int tsId) {
+		ConfSecurities.getInstance();
+		// 启动HsqlDb
+		try {
+			HSqlDbServer.getInstance();
+		} catch (Exception e) {
+			LOGGER.error(e.getLocalizedMessage());
+			return UJSon.rstFalse(e.getMessage());
+		}
+
+		String sql = "select * from TRACE_SERVER where ts_id = " + tsId;
+		DTTable tb = DTTable.getJdbcTable(sql, HSqlDbServer.CONN_STR);
+		if (tb.getCount() == 0) {
+			LOGGER.error("配置信息不存在");
+			return UJSon.rstFalse("配置信息不存在");
+
+		}
+		String password, server, database, username;
+		int port;
+		try {
+			server = tb.getCell(0, "TS_HOST").toString();
+			port = tb.getCell(0, "TS_PORT").toInt();
+			database = tb.getCell(0, "TS_DATABASE").toString();
+			username = tb.getCell(0, "TS_UID").toString();
+			password = tb.getCell(0, "TS_PWD").toString();
+		} catch (Exception e) {
+			LOGGER.error(e.getLocalizedMessage());
+			return UJSon.rstFalse(e.getMessage());
+		}
+
+		if (password != null && password.trim().length() > 0) {
+			try {
+				password = UAes.defaultDecrypt(password);
+			} catch (Exception e) {
+				LOGGER.error(e.getLocalizedMessage());
+				return UJSon.rstFalse(e.getMessage());
+			}
+		}
+
+		return SqlServerProfiler.testConnection(server, port, database, username, password);
+
+	}
+
 	/**
 	 * 
 	 * @param tsId
@@ -192,8 +304,7 @@ public class SqlServerProfiler {
 		UPath.initPath();
 	}
 
-	public void init(String server, int port, String database, String username, String password)
-			throws ParserConfigurationException, SAXException, IOException {
+	public void init(String server, int port, String database, String username, String password) throws Exception {
 		if (initialized) {
 			return;
 		}
@@ -204,7 +315,9 @@ public class SqlServerProfiler {
 		this.password = password;
 		this.port = port;
 
-		this.initSqlServerTraceConnPool();
+		if (!this.initSqlServerTraceConnPool()) {
+			throw new Exception("无法初始化数据库连接");
+		}
 		this.initEventColumns();
 
 		initialized = true;
@@ -277,9 +390,10 @@ public class SqlServerProfiler {
 	public void pauseProfiling() {
 		if (this.m_ProfilingState != ProfilingStateEnum.psProfiling)
 			return;
-		DataConnection cnn = getConnection();
-		this.m_Rdr.pauseTrace(cnn);
+
 		try {
+			DataConnection cnn = getConnection();
+			this.m_Rdr.pauseTrace(cnn);
 			cnn.close();
 		} catch (Exception err) {
 			LOGGER.warn("close cnn {}", err.getMessage());
@@ -322,12 +436,12 @@ public class SqlServerProfiler {
 			return;
 		}
 
-		DataConnection cnn = getConnection();
-		this.m_Rdr.pauseTrace(cnn);
-		this.m_Rdr.closeTrace(cnn);
-		cnn.close();
-
 		try {
+			DataConnection cnn = getConnection();
+			this.m_Rdr.pauseTrace(cnn);
+			this.m_Rdr.closeTrace(cnn);
+			cnn.close();
+
 			this.m_Rdr.close();
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
@@ -395,7 +509,7 @@ public class SqlServerProfiler {
 	}
 
 	public void recordToDb(ProfilerEvent evt) {
-		//	Blobs and Clobs
+		// Blobs and Clobs
 		// HSQLDB is the only SQL open source database that supports a dedicated LOB store. Blobs and clobs can be very
 		// large and benefit from a separate store that avoids mixing their data with row data which is not too large.
 		// Internal database tables are used for the LOB catalog. Therefore each access to a LOB has the overhead of
@@ -498,13 +612,16 @@ public class SqlServerProfiler {
 
 	}
 
-	protected DataConnection getConnection() {
+	protected DataConnection getConnection() throws Exception {
 		DataConnection cnn = new DataConnection();
 		cnn.setConfigName(connStr);
 		cnn.setRequestValue(new RequestValue());
-		cnn.connect();
-		LOGGER.debug("Create a connection {}", cnn.getConnection());
-		return cnn;
+		if (cnn.connect()) {
+			LOGGER.debug("Create a connection {}", cnn.getConnection());
+			return cnn;
+		} else {
+			throw new Exception("Get connection fail");
+		}
 	}
 
 	private DataConnection createSqlServerReaderConnection() throws Exception {
@@ -547,17 +664,25 @@ public class SqlServerProfiler {
 		sb.append("CLOSE @trace_iterator; \n");
 		sb.append("DEALLOCATE @trace_iterator; \n");
 
-		DataConnection cnn = getConnection();
-		cnn.executeUpdateNoParameter(sb.toString());
-		cnn.close();
+		DataConnection cnn = null;
+		try {
+			cnn = getConnection();
+			cnn.executeUpdateNoParameter(sb.toString());
+		} catch (Exception e) {
+			LOGGER.error("clearProfilers {}", e.getMessage());
+		} finally {
+			if (cnn != null) {
+				cnn.close();
+			}
+		}
+
 	}
 
-	private void initSqlServerTraceConnPool() throws ParserConfigurationException, SAXException, IOException {
+	private boolean initSqlServerTraceConnPool() throws ParserConfigurationException, SAXException, IOException {
 		ConnectionConfigs c1 = ConnectionConfigs.instance();
 		// 避免 unable to find valid certification path to requested target
 		// TrustServerCertificate=True
-		this.connUrl = "jdbc:sqlserver://" + server + ":" + port + ";TrustServerCertificate=True;DatabaseName="
-				+ database + ";applicationName=" + APPNAME;
+		this.connUrl = SqlServerProfiler.createConnStr(server, port, database);
 
 		this.traceFileName = APPNAME + "." + this.tsId + "." + Utils.md5(connUrl);
 
@@ -581,7 +706,16 @@ public class SqlServerProfiler {
 		c1.put(connStr, poolCfg);
 		LOGGER.debug("Create pool {} {}", connStr, connUrl);
 
-		// clearProfilers();
+		try {
+			DataConnection cnn = this.getConnection();
+			JSONObject result = testConnection(cnn);
+			LOGGER.info("Test connection: {}", result.toString(2));
+			return true;
+		} catch (Exception err) {
+			LOGGER.error(err.getLocalizedMessage());
+			return false;
+		}
+
 	}
 
 	/**
