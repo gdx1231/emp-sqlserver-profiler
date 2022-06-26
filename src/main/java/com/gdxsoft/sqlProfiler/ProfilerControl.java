@@ -69,8 +69,17 @@ public class ProfilerControl {
 		String tempDir = "";
 
 		MStr help = new MStr();
-		help.al("Usage: --host localhost --port 1433 --username sa --password xxx --database mydb");
-		help.al("Usage: -h localhost -u sa -p xxx -d mydb -P 1433");
+		// help.al("Usage: --host localhost --port 1433 --username sa --password xxx
+		// --database mydb");
+		help.al("https://github.com/gdx1231/emp-sqlserver-profiler");
+		help.al("Usage: -h localhost -u sa -p yourPassword -d yourDatabase -P 1433");
+		help.al("Details: ");
+		help.al("    -h SQLServer host or ip (default localhost)");
+		help.al("    -u Username (default sa)");
+		help.al("    -p Password* (must input)");
+		help.al("    -d Filter database (default blank)");
+		help.al("    -w HSQLDB path (default " + HSqlDbServer.getDefaultWorkPath() + ")");
+		
 		if (length % 2 != 0) {
 			System.out.println(help);
 			System.exit(0);
@@ -132,7 +141,7 @@ public class ProfilerControl {
 
 	public static void console(String[] args) {
 		UPath.initPath();
-		
+
 		BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
 		SqlServerProfiler profiler = null;
 
