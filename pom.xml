@@ -8,7 +8,7 @@
 
 	<name>SqlServer Profiler</name>
 	<url>http://maven.apache.org</url>
-	
+
 	<description>SqlServer profiler java console</description>
 
 	<developers>
@@ -102,7 +102,7 @@
 			<artifactId>logback-classic</artifactId>
 			<version>1.2.3</version>
 		</dependency>
-		
+
 		<!-- https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc -->
 		<dependency>
 			<groupId>com.microsoft.sqlserver</groupId>
@@ -124,7 +124,7 @@
 			<scope>test</scope>
 		</dependency>
 		-->
-		
+
 	</dependencies>
 
 	<build>
@@ -216,13 +216,47 @@
 			</plugin>
 		</plugins>
 	</build>
-	<!-- 发布项目 -->
-	<!-- mvn clean deploy -P release -->
-	<!-- https://issues.sonatype.org/browse/OSSRH-65277 -->
-	<!-- https://oss.sonatype.org/ -->
+
 	<profiles>
 		<profile>
-			<id>release</id> 
+			<!-- 打包成一个jar -->
+			<!-- mvn -P onepackage package -->
+			<id>onepackage</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<configuration>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
+							<archive>
+								<manifest>
+									<mainClass>com.gdxsoft.sqlProfiler.ProfilerControl</mainClass>
+								</manifest>
+							</archive>
+							<outputDirectory>${project.build.directory}/onepackage</outputDirectory>
+						</configuration>
+						<executions>
+							<execution>
+								<id>make-assembly</id>
+								<phase>package</phase>
+								<goals>
+									<goal>assembly</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<!-- 发布项目 -->
+			<!-- mvn clean deploy -P release -->
+			<!-- https://issues.sonatype.org/browse/OSSRH-65277 -->
+			<!-- https://oss.sonatype.org/ -->
+			<id>release</id>
 			<build>
 				<plugins>
 					<!-- Source -->

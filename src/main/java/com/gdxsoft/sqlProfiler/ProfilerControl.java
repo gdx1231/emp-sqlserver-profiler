@@ -55,8 +55,14 @@ public class ProfilerControl {
 		HSqlDbServer.WORK_PATH = workPath;
 
 		System.out.println("Try connection to the SQLServer, " + host + ":" + port);
-		SqlServerProfiler profiler = SqlServerProfiler.getInstance(host, port, database, username, password);
-		return profiler;
+		JSONObject result = SqlServerProfiler.testConnection(host, port, database, username, password);
+		System.out.println(result.toString(2));
+		if(result.optBoolean("RST")){
+			SqlServerProfiler profiler = SqlServerProfiler.getInstance(host, port, database, username, password);
+			return profiler;	
+		} else {
+			throw new Exception(result.toString(2));
+		}
 	}
 
 	private static SqlServerProfiler byArgs(String[] args) throws Exception {

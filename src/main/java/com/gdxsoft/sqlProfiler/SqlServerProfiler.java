@@ -135,8 +135,26 @@ public class SqlServerProfiler {
 		} catch (SQLException e) {
 			return UJSon.rstFalse(e.getMessage());
 		}
+
+		
+		 
+		String cfgName ="test_sqlserver_connection";
+		ConnectionConfig poolCfg = new ConnectionConfig();
+		poolCfg.setName(cfgName);
+		poolCfg.setType("MSSQL");
+		poolCfg.setConnectionString(connStr);
+		poolCfg.setSchemaName("dbo");
+
+		ConnectionConfigs c1;
+		try {
+			c1 = ConnectionConfigs.instance();
+			c1.put(cfgName, poolCfg);
+		} catch ( Exception e) {
+			return UJSon.rstFalse(e.getMessage());
+		}  
+
 		DataConnection cnn = new DataConnection();
-		cnn.setConfigName(connStr);
+		cnn.setConfigName(cfgName);
 		cnn.setRequestValue(new RequestValue());
 		cnn.getDataHelper().setConnection(con);
 
