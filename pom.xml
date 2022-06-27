@@ -156,6 +156,7 @@
 						</goals>
 						<configuration>
 							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+
 						</configuration>
 					</execution>
 				</executions>
@@ -237,6 +238,7 @@
 								</manifest>
 							</archive>
 							<outputDirectory>${project.build.directory}/onepackage</outputDirectory>
+							<finalName>${project.build.finalName}.onepackage</finalName>    
 						</configuration>
 						<executions>
 							<execution>
