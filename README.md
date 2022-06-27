@@ -42,4 +42,5 @@ java -cp target/emp-sqlserver-profiler-1.0.0.jar;target/lib/* com.gdxsoft.sqlPro
     <groupId>com.gdxsoft</groupId>
     <artifactId>emp-sqlserver-profiler</artifactId>
     <version>1.0.1</version>
-</dependency>```
+</dependency>
+```
