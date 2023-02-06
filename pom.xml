@@ -3,7 +3,7 @@
 
 	<groupId>com.gdxsoft</groupId>
 	<artifactId>emp-sqlserver-profiler</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 	<packaging>jar</packaging>
 
 	<name>SqlServer Profiler</name>
@@ -50,7 +50,7 @@
 		<dependency>
 			<groupId>com.gdxsoft.easyweb</groupId>
 			<artifactId>emp-script</artifactId>
-			<version>[1.1.4]</version>
+			<version>[1.1.5]</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.jodconverter</groupId>
@@ -81,7 +81,7 @@
 		<dependency>
 			<groupId>com.gdxsoft.easyweb</groupId>
 			<artifactId>emp-script-utils</artifactId>
-			<version>[1.1.4]</version>
+			<version>[1.1.5]</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.apache.httpcomponents</groupId>
