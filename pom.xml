@@ -189,12 +189,13 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.8</version>
 				<executions>
 					<execution>
 						<id>copy-lib-src-webapps</id>
 						<phase>package</phase>
 						<configuration>
-							<tasks>
+							<target>
 								<echo>copy ${project.build.finalName}.jar to ${basedir}/../../workspace.newVersion/allclass/lib/</echo>
 								<copy todir="${basedir}/../../workspace.newVersion/allclass/lib/">
 									<fileset dir="${project.build.directory}">
@@ -207,7 +208,7 @@
 										<include name="*" />
 									</fileset>
 								</copy>
-							</tasks>
+							</target>
 						</configuration>
 						<goals>
 							<goal>run</goal>
