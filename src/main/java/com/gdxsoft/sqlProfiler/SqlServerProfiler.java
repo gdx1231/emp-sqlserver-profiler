@@ -136,9 +136,7 @@ public class SqlServerProfiler {
 			return UJSon.rstFalse(e.getMessage());
 		}
 
-		
-		 
-		String cfgName ="test_sqlserver_connection";
+		String cfgName = "test_sqlserver_connection";
 		ConnectionConfig poolCfg = new ConnectionConfig();
 		poolCfg.setName(cfgName);
 		poolCfg.setType("MSSQL");
@@ -149,9 +147,9 @@ public class SqlServerProfiler {
 		try {
 			c1 = ConnectionConfigs.instance();
 			c1.put(cfgName, poolCfg);
-		} catch ( Exception e) {
+		} catch (Exception e) {
 			return UJSon.rstFalse(e.getMessage());
-		}  
+		}
 
 		DataConnection cnn = new DataConnection();
 		cnn.setConfigName(cfgName);
@@ -528,19 +526,28 @@ public class SqlServerProfiler {
 
 	public void recordToDb(ProfilerEvent evt) {
 		// Blobs and Clobs
-		// HSQLDB is the only SQL open source database that supports a dedicated LOB store. Blobs and clobs can be very
-		// large and benefit from a separate store that avoids mixing their data with row data which is not too large.
-		// Internal database tables are used for the LOB catalog. Therefore each access to a LOB has the overhead of
-		// catalog lookup. This overhead is justified when the stored LOBs are large. HSQLDB supports long VARCHAR and
-		// VARBINARY columns that can be used instead of CLOB and BLOB especially when the average lob size is below 32
+		// HSQLDB is the only SQL open source database that supports a dedicated LOB
+		// store. Blobs and clobs can be very
+		// large and benefit from a separate store that avoids mixing their data with
+		// row data which is not too large.
+		// Internal database tables are used for the LOB catalog. Therefore each access
+		// to a LOB has the overhead of
+		// catalog lookup. This overhead is justified when the stored LOBs are large.
+		// HSQLDB supports long VARCHAR and
+		// VARBINARY columns that can be used instead of CLOB and BLOB especially when
+		// the average lob size is below 32
 		// KB. These types do not have the LOB catalog overhead.
 
-		int k32 = 32 * 1024; // 32k - 避免使用 Blob和Clob，会造成 .lob文件很大 ，普普通通就4-5个G
+		final int k16 = 16 * 1024; // 16k - 避免使用 Blob和Clob，会造成 .lob文件很大 ，普普通通就4-5个G
 		RequestValue rv = new RequestValue();
 		rv.addOrUpdateValue("TS_ID", this.tsId, "int", 100);
 		rv.addOrUpdateValue("TL_ID", USnowflake.nextId(), "bigint", 100);
 
-		rv.addOrUpdateValue("TL_TEXTDATA", evt.getTextData(), "String", k32);
+		String textData = evt.getTextData();
+		if (textData != null && textData.length() > k16) {
+			textData = textData.substring(0, k16);
+		}
+		rv.addOrUpdateValue("TL_TEXTDATA", textData, "String", k16);
 
 		rv.addOrUpdateValue("TL_DURATION", evt.getDuration(), "bigint", 100);
 		rv.addOrUpdateValue("TL_READS", evt.getReads(), "bigint", 100);
@@ -605,14 +612,19 @@ public class SqlServerProfiler {
 		rv.addOrUpdateValue("TL_Mode", evt.getMode(), "int", 100);
 		rv.addOrUpdateValue("TL_ColumnPermissions", evt.getColumnPermissions(), "int", 100);
 
-		rv.addOrUpdateValue("TL_LOGINSID", evt.getLoginSid(), "binary", k32);
-		rv.addOrUpdateValue("TL_BinaryData", evt.getBinaryData(), "binary", k32);
-		rv.addOrUpdateValue("TL_TargetLoginSid", evt.getTargetLoginSid(), "binary", k32);
-		rv.addOrUpdateValue("TL_PlanHandle", evt.getPlanHandle(), "binary", k32);
+		rv.addOrUpdateValue("TL_LOGINSID", evt.getLoginSid(), "binary", k16);
+		rv.addOrUpdateValue("TL_BinaryData", evt.getBinaryData(), "binary", k16);
+		rv.addOrUpdateValue("TL_TargetLoginSid", evt.getTargetLoginSid(), "binary", k16);
+		rv.addOrUpdateValue("TL_PlanHandle", evt.getPlanHandle(), "binary", k16);
 
 		rv.addOrUpdateValue("TL_GUID", evt.getGUID());
 
-		DataConnection.updateAndClose(SQL_LOG_NEW, HSqlDbServer.CONN_STR, rv);
+		DataConnection cnn = new DataConnection(HSqlDbServer.CONN_STR, rv);
+		cnn.executeUpdate(SQL_LOG_NEW);
+		if (cnn.getErrorMsg() != null) {
+			LOGGER.info("TextData-length: {}", evt.getTextData().length());
+		}
+		cnn.close();
 	}
 
 	protected void newEventArrived(ProfilerEvent evt, boolean last) {
