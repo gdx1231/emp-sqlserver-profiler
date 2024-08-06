@@ -5,7 +5,7 @@
 
 	<groupId>com.gdxsoft</groupId>
 	<artifactId>emp-sqlserver-profiler</artifactId>
-	<version>1.0.2</version>
+	<version>1.0.3</version>
 	<packaging>jar</packaging>
 
 	<name>SqlServer Profiler</name>
